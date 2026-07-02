@@ -57,6 +57,15 @@ with open("config.yaml") as f:
 print("Loading model...")
 model = EncDecRNNTBPEModel.from_pretrained(cfg["model_name"])
 
+print("=" * 80)
+
+try:
+    print("ATT_CONTEXT:", model.cfg.encoder.att_context_size)
+except Exception as e:
+    print("ATT_CONTEXT not found:", e)
+
+print("=" * 80)
+
 
 # =========================================================
 # 4. LORA INJECTION (SAFE + ROBUST)
@@ -239,14 +248,5 @@ trainer.fit(model, ckpt_path="/workspace/Nemo_asr/checkpoints/last.ckpt")
 # =========================================================
 print("Saving model...")
 
-model.save_to("nemotron_uz.nemo")
-
-lora_state = {
-    k: v.cpu()
-    for k, v in model.state_dict().items()
-    if "lora_" in k
-}
-
-torch.save(lora_state, "nemotron_uz_lora.pt")
 
 print("Done.")
