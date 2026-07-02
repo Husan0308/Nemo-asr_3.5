@@ -1,4 +1,8 @@
 nemo_toolkit[asr]==2.4.0
+torch>=2.5.0
+torchaudio>=2.5.0
+torchvision>=0.20.0
+lightning>=2.5.0
 datasets==4.0.0
 huggingface_hub==0.34.1
 omegaconf==2.3.0
@@ -9,7 +13,12 @@ soundfile==0.13.1
 librosa==0.11.0
 lhotse==1.31.1
 webdataset==1.0.2
+numpy>=1.26.0
 pandas==2.3.1
 tqdm==4.67.1
 tensorboard==2.19.0
 accelerate==1.9.0
+scipy>=1.13.0
+matplotlib>=3.9.0
+jiwer>=3.0.0
+editdistance>=0.8.1
