@@ -1,0 +1,33 @@
+model_name: nvidia/nemotron-3.5-asr-streaming-0.6b
+
+lora:
+  rank: 8
+  alpha: 16
+
+train_ds:
+  manifest_filepath: manifests/train.json
+
+  batch_duration: 25
+  max_duration: 20
+
+  use_bucketing: true
+  num_buckets: 20
+
+  bucket_buffer_size: 2000
+  shuffle_buffer_size: 2000
+
+  num_workers: 4
+
+validation_ds:
+  manifest_filepath: manifests/val.json
+  batch_size: 1
+  num_workers: 2
+
+optim:
+  lr: 0.00005
+
+trainer:
+  precision: bf16-mixed
+  max_epochs: 5
+  accumulate_grad_batches: 64
+  gradient_clip_val: 1.0
