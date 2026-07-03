@@ -17,7 +17,7 @@ import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 import torch
-torch.set_float32_matmul_precision("high")
+torch.set_float32_matmul_precision("medium")
 
 
 # =========================================================
@@ -241,7 +241,7 @@ if hasattr(train_dl, "dataset"):
 # 10. TRAIN
 # =========================================================
 print("Starting training...")
-trainer.fit(model, ckpt_path="/workspace/Nemo_asr/checkpoints/last.ckpt")
+trainer.fit(model)
 
 # =========================================================
 # 11. SAVE OUTPUTS
