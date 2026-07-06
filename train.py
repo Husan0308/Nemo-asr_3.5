@@ -9,7 +9,7 @@ from nemo.collections.asr.models import EncDecRNNTBPEModel
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from lora import LoRALinear
-
+from lightning.pytorch.callbacks import Callback
 
 
 import os
@@ -167,6 +167,53 @@ model.cfg.optim.sched = {}
 model._cfg.optim.sched = {}
 
 
+# =========================================================
+# VALIDATION WER ENABLE
+# =========================================================
+OmegaConf.set_struct(model.cfg.validation_ds, False)
+
+model.cfg.validation_ds.compute_eval_loss = True
+model.cfg.validation_ds.shuffle = False
+
+
+
+# =========================================================
+# WER CALLBACK
+# =========================================================
+class PrintWERCallback(Callback):
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+
+        metrics = trainer.callback_metrics
+
+        print("\n" + "=" * 80)
+        print(f"VALIDATION EPOCH {trainer.current_epoch}")
+
+        found = False
+
+        for k, v in metrics.items():
+
+            name = str(k).lower()
+
+            if "wer" in name:
+                try:
+                    print(f"{k}: {float(v):.6f}")
+                except:
+                    print(f"{k}: {v}")
+                found = True
+
+        if "val_loss" in metrics:
+            try:
+                print(f"val_loss: {float(metrics['val_loss']):.6f}")
+            except:
+                print(f"val_loss: {metrics['val_loss']}")
+
+        if not found:
+            print("WARNING: No WER metric found!")
+            print("Available metrics:")
+            print(list(metrics.keys()))
+
+        print("=" * 80 + "\n")
 
 
 
@@ -201,7 +248,7 @@ checkpoint_callback = ModelCheckpoint(
 )
 
 lr_monitor = LearningRateMonitor(logging_interval="step")
-
+wer_callback = PrintWERCallback()
 
 # =========================================================
 # 9. TRAINER (PRODUCTION SETTINGS)
@@ -209,13 +256,38 @@ lr_monitor = LearningRateMonitor(logging_interval="step")
 trainer = pl.Trainer(
     accelerator="gpu",
     devices=1,
+
     precision=get(cfg, "trainer", "precision", default="bf16-mixed"),
+
     max_epochs=get(cfg, "trainer", "max_epochs", default=10),
-    accumulate_grad_batches=get(cfg, "trainer", "accumulate_grad_batches", default=1),
-    gradient_clip_val=get(cfg, "trainer", "gradient_clip_val", default=1.0),
+
+    accumulate_grad_batches=get(
+        cfg,
+        "trainer",
+        "accumulate_grad_batches",
+        default=1,
+    ),
+
+    gradient_clip_val=get(
+        cfg,
+        "trainer",
+        "gradient_clip_val",
+        default=1.0,
+    ),
+
     log_every_n_steps=10,
+
+    check_val_every_n_epoch=1,
+    num_sanity_val_steps=0,
+
     enable_checkpointing=True,
-    callbacks=[checkpoint_callback, lr_monitor],
+
+    callbacks=[
+        checkpoint_callback,
+        lr_monitor,
+        wer_callback,
+    ],
+
     deterministic=True,
 )
 
