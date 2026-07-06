@@ -234,6 +234,35 @@ if hasattr(train_dl, "dataset"):
     print("DATASET:", type(train_dl.dataset))
 
 
+# ========================================================
+#  [Batch, Time, Hidden]
+# ========================================================
+
+
+orig_forward = model.encoder.forward
+
+def debug_forward(*args, **kwargs):
+    out = orig_forward(*args, **kwargs)
+
+    if isinstance(out, tuple):
+        enc, enc_len = out[:2]
+
+        print(
+            f"ENCODER SHAPE: "
+            f"batch={enc.shape[0]}, "
+            f"time={enc.shape[2]}, "
+            f"hidden={enc.shape[1]}"
+        )
+
+        print("RAW:", enc.shape)
+
+        enc_btd = enc.transpose(1, 2)
+
+        print("BTD:", enc_btd.shape)
+
+    return out
+
+model.encoder.forward = debug_forward
 
 
 
